@@ -1,0 +1,8 @@
+{
+  "name": "coss-telegram-notifier",
+  "version": "1.0.0",
+  "dependencies": {
+    "coss-api-node": "0.0.7",
+    "node-telegram-bot-api": "^0.30.0",
+  }
+}
