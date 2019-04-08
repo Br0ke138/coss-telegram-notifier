@@ -6,7 +6,7 @@
 - Create a COSS API KEY pair (trading disabled)
 
 ```sh
-$ https://github.com/Br0ke138/coss-telegram-notifier.git
+$ git clone https://github.com/Br0ke138/coss-telegram-notifier.git
 $ cd coss-telegram-notifier
 $ npm install
 ```
