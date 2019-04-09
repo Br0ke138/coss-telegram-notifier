@@ -11,7 +11,12 @@ $ cd coss-telegram-notifier
 $ npm install
 ```
 
-- Add the bot token + Api Keys to index.js
+### Config
+- Add the bot token + Api Keys to config.json
+- Use the /start command. This will print your chat id
+- Add the chat id to config.json
+- CHECK_RATE_IN_SECONDS = Time between each update cycle
+- TIME_BETWEEN_CALLS_IN_SECONDS = If watching multiple pairs, time between each pair
 
 ### Start
 ```sh
