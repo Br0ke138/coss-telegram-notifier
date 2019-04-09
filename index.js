@@ -207,6 +207,7 @@ function processNewAndUpdatedOpenOrders(pair, cb) {
                         const msg =
                             'Order update:' + '\n' +
                             'Pair: ' + order.order_symbol + '\n' +
+                            'Price: ' + order.order_price + '\n' +
                             'Side: ' + order.order_side + '\n' +
                             'Status: ' + order.status + '\n' +
                             'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
@@ -217,6 +218,7 @@ function processNewAndUpdatedOpenOrders(pair, cb) {
                     const msg =
                         'New Order:' + '\n' +
                         'Pair: ' + order.order_symbol + '\n' +
+                        'Price: ' + order.order_price + '\n' +
                         'Side: ' + order.order_side + '\n' +
                         'Status: ' + order.status + '\n' +
                         'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
@@ -241,6 +243,7 @@ function processCompletedOrders(pair, cb) {
                         const msg =
                             'Order filled:' + '\n' +
                             'Pair: ' + order.order_symbol + '\n' +
+                            'Price: ' + order.order_price + '\n' +
                             'Side: ' + order.order_side + '\n' +
                             'Status: ' + order.status + '\n' +
                             'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
@@ -249,6 +252,7 @@ function processCompletedOrders(pair, cb) {
                         const msg =
                             'Order canceled:' + '\n' +
                             'Pair: ' + order.order_symbol + '\n' +
+                            'Price: ' + order.order_price + '\n' +
                             'Side: ' + order.order_side + '\n' +
                             'Status: ' + order.status + '\n' +
                             'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
