@@ -1,31 +1,30 @@
 const TelegramBot = require('node-telegram-bot-api');
 const Coss = require('coss-api-node');
+const config = require('./config');
 
 // ################# CONFIG ###################
 // ################# CONFIG ###################
 
 // replace the value below with the Telegram token you receive from @BotFather
-const token = 'bot_token';
+const token = config.botToken;
 const bot = new TelegramBot(token, {polling: true});
 
 // How often should the bot check for order updates
-const CHECK_RATE_IN_SECONDS = 60;
+const CHECK_RATE_IN_SECONDS = config.CHECK_RATE_IN_SECONDS;
 
 // FOR MULTIPLE PAIRS
-const TIME_BETWEEN_CALLS_IN_SECONDS = 5;
+const TIME_BETWEEN_CALLS_IN_SECONDS = config.TIME_BETWEEN_CALLS_IN_SECONDS;
 
 // Start bot and use /start to get your chat id
-const CHAT_ID = 'CHAT_ID';
+const CHAT_ID = config.CHAT_ID;
 
 // COSS API KEYS
-const PUBLIC_KEY = 'Your_Public_Key';
-const PRIVATE_KEY = 'Your_Private_Key';
+const PUBLIC_KEY = config.PUBLIC_KEY;
+const PRIVATE_KEY = config.PRIVATE_KEY;
 
-let pairs = [];
 
 // A restart of the bot loses all added pairs which you added via /add
-// Uncomment to add COSS-ETH to the watch list everytime the script gets started
-// pairs = ['COSS-ETH'];
+let pairs = config.PAIRS_TO_INITIALLY_ADD;
 
 // ################# CONFIG ###################
 // ################# CONFIG ###################
@@ -86,7 +85,7 @@ bot.onText(/\/stop/, (msg) => {
 bot.onText(/\/add/, (msg) => {
     const chatId = msg.chat.id;
     if (CHAT_ID === chatId) {
-        askForPair( function (pair) {
+        askForPair(function (pair) {
             if (pairs.includes(pair)) {
                 bot.sendMessage(CHAT_ID, "Already watching " + pair);
             } else if (pair.includes('/') || !pair.includes('-') || pair.includes('_')) {
@@ -95,7 +94,7 @@ bot.onText(/\/add/, (msg) => {
             } else {
                 if (interval) {
                     bot.sendMessage(CHAT_ID, "Collecting previous completed and partial filled orders");
-                    checkOrders( pair.toUpperCase(), () => {
+                    checkOrders(pair.toUpperCase(), () => {
                         pairs.push(pair.toUpperCase());
                         bot.sendMessage(CHAT_ID, "Bot started watching " + pair.toUpperCase());
                     })
@@ -131,6 +130,9 @@ bot.onText(/\/list/, (msg) => {
             bot.sendMessage(CHAT_ID, "List is empty. Add some pairs with /add");
         } else {
             bot.sendMessage(CHAT_ID, pairs.toString());
+            coss.getAccountBalances((err, resp, body) => {
+                console.log(body);
+            })
         }
     }
 });
@@ -150,11 +152,6 @@ function startBot() {
 
     bot.sendMessage(CHAT_ID, "Collecting orders ...");
     checkForUpdates();
-    bot.sendMessage(CHAT_ID, "Bot started");
-
-    interval = setInterval(() => {
-        checkForUpdates();
-    }, CHECK_RATE_IN_SECONDS * 1000);
 }
 
 function stopBot() {
@@ -188,6 +185,12 @@ function processPair(pairs, index) {
                 }
                 if (pairs[index + 1]) {
                     processPair(pairs, index + 1);
+                } else if (interval) {
+                    bot.sendMessage(CHAT_ID, "Bot started");
+
+                    interval = setInterval(() => {
+                        checkForUpdates();
+                    }, CHECK_RATE_IN_SECONDS * 1000);
                 }
             })
         });
@@ -199,7 +202,7 @@ function processNewAndUpdatedOpenOrders(pair, cb) {
         if (err) {
             cb(err);
         } else {
-            orders.forEach((order) => {
+            orders.list.forEach((order) => {
                 if (open[order.order_id] && open[order.order_id] !== order.executed) {
                     const msg =
                         'Order update:' + '\n' +
@@ -230,25 +233,27 @@ function processCompletedOrders(pair, cb) {
         if (err) {
             cb(err);
         } else {
-            orders.forEach((order) => {
-                if (open[order.order_id] && order.status === 'filled') {
-                    const msg =
-                        'Order filled:' + '\n' +
-                        'Pair: ' + order.order_symbol + '\n' +
-                        'Side: ' + order.order_side + '\n' +
-                        'Status: ' + order.status + '\n' +
-                        'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
-                    bot.sendMessage(CHAT_ID, msg);
-                } else {
-                    const msg =
-                        'Order canceled:' + '\n' +
-                        'Pair: ' + order.order_symbol + '\n' +
-                        'Side: ' + order.order_side + '\n' +
-                        'Status: ' + order.status + '\n' +
-                        'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
-                    bot.sendMessage(CHAT_ID, msg);
+            orders.list.forEach((order) => {
+                if (open[order.order_id]) {
+                    if (open[order.order_id] && order.status === 'filled') {
+                        const msg =
+                            'Order filled:' + '\n' +
+                            'Pair: ' + order.order_symbol + '\n' +
+                            'Side: ' + order.order_side + '\n' +
+                            'Status: ' + order.status + '\n' +
+                            'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
+                        bot.sendMessage(CHAT_ID, msg);
+                    } else {
+                        const msg =
+                            'Order canceled:' + '\n' +
+                            'Pair: ' + order.order_symbol + '\n' +
+                            'Side: ' + order.order_side + '\n' +
+                            'Status: ' + order.status + '\n' +
+                            'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
+                        bot.sendMessage(CHAT_ID, msg);
+                    }
+                    delete open[order.order_id];
                 }
-                delete open[order.order_id];
             });
             cb(null);
         }
