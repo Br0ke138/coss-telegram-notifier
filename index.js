@@ -130,9 +130,6 @@ bot.onText(/\/list/, (msg) => {
             bot.sendMessage(CHAT_ID, "List is empty. Add some pairs with /add");
         } else {
             bot.sendMessage(CHAT_ID, pairs.toString());
-            coss.getAccountBalances((err, resp, body) => {
-                console.log(body);
-            })
         }
     }
 });
@@ -173,6 +170,7 @@ function checkForUpdates() {
 
 function processPair(pairs, index) {
     const pair = pairs[index];
+    console.log('processing pair', pair);
 
     setTimeout(() => {
         processNewAndUpdatedOpenOrders(pair, (err) => {
@@ -185,7 +183,7 @@ function processPair(pairs, index) {
                 }
                 if (pairs[index + 1]) {
                     processPair(pairs, index + 1);
-                } else if (interval) {
+                } else if (!interval) {
                     bot.sendMessage(CHAT_ID, "Bot started");
 
                     interval = setInterval(() => {
@@ -202,16 +200,19 @@ function processNewAndUpdatedOpenOrders(pair, cb) {
         if (err) {
             cb(err);
         } else {
+            console.log('processing new and updated open Orders');
             orders.list.forEach((order) => {
-                if (open[order.order_id] && open[order.order_id] !== order.executed) {
-                    const msg =
-                        'Order update:' + '\n' +
-                        'Pair: ' + order.order_symbol + '\n' +
-                        'Side: ' + order.order_side + '\n' +
-                        'Status: ' + order.status + '\n' +
-                        'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
-                    bot.sendMessage(CHAT_ID, msg);
-                    open[order.order_id] = order.executed;
+                if (open[order.order_id]) {
+                    if (open[order.order_id] !== order.executed) {
+                        const msg =
+                            'Order update:' + '\n' +
+                            'Pair: ' + order.order_symbol + '\n' +
+                            'Side: ' + order.order_side + '\n' +
+                            'Status: ' + order.status + '\n' +
+                            'Progress: ' + order.executed + '/' + order.order_size + '(' + (order.executed * 100 / order.order_size).toFixed(0) + '%)';
+                        bot.sendMessage(CHAT_ID, msg);
+                        open[order.order_id] = order.executed;
+                    }
                 } else {
                     const msg =
                         'New Order:' + '\n' +
@@ -233,6 +234,7 @@ function processCompletedOrders(pair, cb) {
         if (err) {
             cb(err);
         } else {
+            console.log('processing completed Orders');
             orders.list.forEach((order) => {
                 if (open[order.order_id]) {
                     if (open[order.order_id] && order.status === 'filled') {
